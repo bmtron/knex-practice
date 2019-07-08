@@ -1,0 +1,33 @@
+require('dotenv').config()
+const knex = require('knex')
+const ArticlesService = require('./articles-service')
+
+const knexInstance = knex({
+    client: 'pg',
+    connection: process.env.DB_URL
+})
+
+ArticlesService.getAllArticles(knexInstance)
+  .then(articles => console.log(articles))
+  .then(() =>
+    ArticlesService.insertArticle(knexInstance, {
+      title: 'New title',
+      content: 'New content',
+      date_published: new Date(),
+    })
+  )
+  .then(newArticle => {
+    console.log(newArticle)
+    return ArticlesService.updateArticle(
+      knexInstance,
+      newArticle.id,
+      { title: 'Updated title' }
+    ).then(() => ArticlesService.getById(knexInstance, newArticle.id))
+  })
+  .then(article => {
+    console.log(article)
+    console.log(`Article ${article.id} will be deleted`)
+    return ArticlesService.deleteArticle(knexInstance, article.id)
+  })
+
+console.log(ArticlesService.getAllArticles(knexInstance))
